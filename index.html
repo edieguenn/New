@@ -170,4 +170,69 @@
         window.onload = function() {
             // Extract cage number from URL
             const params = new URLSearchParams(window.location.search);
-            const cageNumber = params
+            const cageNumber = params.get('cage') || 1;
+
+            // Load rabbit data from localStorage
+            const data = JSON.parse(localStorage.getItem(`rabbitData${cageNumber}`)) || {};
+
+            // Update profile details
+            document.getElementById('breed').innerText = data.breed || 'Unknown';
+            document.getElementById('cage-no').innerText = cageNumber;
+            document.getElementById('age').innerText = calculateAge(data.birthDate) || 'Unknown';
+            document.getElementById('weight').innerText = data.weight || 'Unknown';
+            document.getElementById('gender').innerText = data.gender || 'Unknown';
+
+            // Update edit link dynamically to point to the correct cage number
+            document.getElementById('edit-link').href = `index.html?cage=${cageNumber}`;
+        }
+
+        // Show the form to add a new cage
+        document.getElementById('add-cage-btn').addEventListener('click', () => {
+            document.getElementById('form-container').style.display = 'flex';
+        });
+
+        // Save new cage data
+        document.getElementById('save-cage-btn').addEventListener('click', () => {
+            const newCageNumber = document.getElementById('new-cage-no').value;
+            const newBreed = document.getElementById('new-breed').value;
+            const birthDate = document.getElementById('birth-date').value;
+            const newWeight = document.getElementById('new-weight').value;
+            const newGender = document.getElementById('new-gender').value;
+
+            // Save data to localStorage
+            const newCageData = {
+                breed: newBreed,
+                birthDate: birthDate,
+                weight: newWeight,
+                gender: newGender
+            };
+
+            localStorage.setItem(`rabbitData${newCageNumber}`, JSON.stringify(newCageData));
+
+            // Reload the page with the new cage number
+            window.location.href = `index.html?cage=${newCageNumber}`;
+        });
+
+        // Function to calculate age from birth date
+        function calculateAge(birthDate) {
+            if (!birthDate) return null;
+            const birth = new Date(birthDate);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+
+            // If age is less than 1 year, calculate months
+            if (age < 1) {
+                const months = (today.getFullYear() - birth.getFullYear()) * 12 + today.getMonth() - birth.getMonth();
+                return months + (months > 1 ? ' months' : ' month');
+            }
+
+            return age + (age > 1 ? ' years' : ' year');
+        }
+    </script>
+</body>
+</html>
