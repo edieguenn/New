@@ -90,6 +90,28 @@
             cursor: pointer;
         }
 
+        .cage-list {
+            margin-top: 20px;
+        }
+
+        .cage-list li {
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .delete-cage {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
         /* Responsive styling */
         @media (max-width: 768px) {
             .cage-list {
@@ -139,27 +161,33 @@
         </div>
     </div>
 
+    <form id="cage-form">
+        <label for="cage-number">Cage Number:</label>
+        <input type="number" id="cage-number" min="1" value="1" required>
+        <button type="submit">Add/Update Cage</button>
+    </form>
+
+    <ul id="cage-list" class="cage-list"></ul>
+
     <script>
         window.onload = function() {
-            // Extract cage number from URL
             const params = new URLSearchParams(window.location.search);
             const cageNumber = params.get('cage') || 1;
+            loadProfile(cageNumber);
+            loadCageList();
+        }
 
-            // Load rabbit data from localStorage
+        function loadProfile(cageNumber) {
             const data = JSON.parse(localStorage.getItem(`rabbitData${cageNumber}`)) || {};
 
-            // Update profile details
             document.getElementById('breed').innerText = data.breed || 'Unknown';
             document.getElementById('cage-no').innerText = cageNumber;
             document.getElementById('age').innerText = calculateAge(data.birthDate) || 'Unknown';
             document.getElementById('weight').innerText = data.weight || 'Unknown';
             document.getElementById('gender').innerText = data.pregnant === "yes" ? "Female" : "Male";
-
-            // Update edit link dynamically to point to the correct cage number
             document.getElementById('edit-link').href = `index.html?cage=${cageNumber}`;
         }
 
-        // Function to calculate age from birth date
         function calculateAge(birthDate) {
             if (!birthDate) return null;
             const birth = new Date(birthDate);
@@ -171,7 +199,6 @@
                 age--;
             }
 
-            // If age is less than 1 year, calculate months
             if (age < 1) {
                 const months = (today.getFullYear() - birth.getFullYear()) * 12 + today.getMonth() - birth.getMonth();
                 return months + (months > 1 ? ' months' : ' month');
@@ -179,7 +206,41 @@
 
             return age + (age > 1 ? ' years' : ' year');
         }
+
+        document.getElementById('cage-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const cageNumber = document.getElementById('cage-number').value;
+            const rabbitData = {
+                breed: 'Unknown',
+                birthDate: null,
+                weight: 'Unknown',
+                pregnant: 'no'
+            };
+            localStorage.setItem(`rabbitData${cageNumber}`, JSON.stringify(rabbitData));
+            loadCageList();
+        });
+
+        function loadCageList() {
+            const cageListElement = document.getElementById('cage-list');
+            cageListElement.innerHTML = '';
+
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key) && key.startsWith('rabbitData')) {
+                    const cageNumber = key.replace('rabbitData', '');
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        Cage ${cageNumber} 
+                        <button class="delete-cage" onclick="deleteCage(${cageNumber})">Delete</button>
+                    `;
+                    cageListElement.appendChild(listItem);
+                }
+            }
+        }
+
+        function deleteCage(cageNumber) {
+            localStorage.removeItem(`rabbitData${cageNumber}`);
+            loadCageList();
+        }
     </script>
 </body>
 </html>
-
